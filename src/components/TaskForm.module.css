@@ -1,0 +1,54 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.field input,
+.field textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.optional {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.success,
+.error {
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.success {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.error {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

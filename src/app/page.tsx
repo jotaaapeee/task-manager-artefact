@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { TaskList } from "@/components/TaskList";
 import { api } from "@/trpc/server";
-import styles from "./page.module.css";
 
 // The data lives in memory and changes at runtime, so this page must render on
 // every request. Without this, `next build` would prerender it once, because
@@ -16,8 +15,8 @@ export default async function Home() {
   const firstPage = await api.task.list({ limit: PAGE_SIZE });
 
   return (
-    <main className={styles.main}>
-      <header className={styles.header}>
+    <main className="container">
+      <header className="page-header">
         <h1>Tasks</h1>
         <Link href="/tasks/new" className="button">
           New task
