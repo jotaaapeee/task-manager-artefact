@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/server/routers/_app";
 import { trpc } from "@/trpc/client";
@@ -39,6 +39,29 @@ export function TaskList({ initialPage, pageSize }: { initialPage: ListPage; pag
     return () => clearTimeout(timer);
   }, [feedback]);
 
+  // Infinite scroll: an empty element after the last row is watched, and
+  // the next page loads when it gets close to the viewport.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = list;
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    // Stop watching after a failed page load. Otherwise the new observer would
+    // fire again right away and retry forever; the user retries with a button.
+    if (!sentinel || !hasNextPage || isFetchingNextPage || isFetchNextPageError) return;
+    // A new observer is created after each page loads. If the sentinel is
+    // still visible (tall screen, short page), it fires at once and loads the
+    // next page too, until the screen is filled.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) fetchNextPage();
+      },
+      // Start loading a bit before the user reaches the end.
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+
   const tasks = list.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
@@ -48,7 +71,9 @@ export function TaskList({ initialPage, pageSize }: { initialPage: ListPage; pag
         {feedback?.text}
       </p>
 
-      {list.isError && <p className={styles.error}>Could not load tasks: {list.error.message}</p>}
+      {list.isError && !isFetchNextPageError && (
+        <p className={styles.error}>Could not load tasks: {list.error.message}</p>
+      )}
 
       {tasks.length === 0 ? (
         <p className={styles.empty}>No tasks yet.</p>
@@ -59,6 +84,20 @@ export function TaskList({ initialPage, pageSize }: { initialPage: ListPage; pag
           ))}
         </ul>
       )}
+
+      <div ref={sentinelRef} />
+      <div className={styles.footer}>
+        {isFetchingNextPage && <p>Loading more…</p>}
+        {isFetchNextPageError && (
+          <p className={styles.error}>
+            Could not load more tasks: {list.error?.message}{" "}
+            <button type="button" className="button secondary" onClick={() => fetchNextPage()}>
+              Try again
+            </button>
+          </p>
+        )}
+        {!hasNextPage && tasks.length > 0 && <p>No more tasks.</p>}
+      </div>
     </section>
   );
 }

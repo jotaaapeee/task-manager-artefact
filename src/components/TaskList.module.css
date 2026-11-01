@@ -51,6 +51,12 @@
   color: var(--muted);
 }
 
+.footer {
+  padding: 16px 0;
+  text-align: center;
+  color: var(--muted);
+}
+
 .success,
 .error {
   padding: 10px 14px;
